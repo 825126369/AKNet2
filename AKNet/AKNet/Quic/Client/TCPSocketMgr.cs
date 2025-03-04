@@ -10,9 +10,9 @@ using System;
 using System.Net;
 using System.Net.Quic;
 using AKNet.Common;
-using AKNet.Tcp.Common;
+using AKNet.Quic.Common;
 
-namespace AKNet.Tcp.Client
+namespace AKNet.Quic.Client
 {
     internal class TCPSocketMgr
 	{

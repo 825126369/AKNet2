@@ -9,9 +9,9 @@
 using System;
 using System.Net.Sockets;
 using AKNet.Common;
-using AKNet.Tcp.Common;
+using AKNet.Quic.Common;
 
-namespace AKNet.Tcp.Client
+namespace AKNet.Quic.Client
 {
 	//和线程打交道
 	internal class MsgReceiveMgr

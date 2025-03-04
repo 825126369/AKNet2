@@ -9,7 +9,7 @@
 using AKNet.Common;
 using System;
 
-namespace AKNet.Tcp.Common
+namespace AKNet.Quic.Common
 {
     internal interface NetStreamEncryptionInterface
     {

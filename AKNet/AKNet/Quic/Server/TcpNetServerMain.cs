@@ -9,7 +9,7 @@
 using System;
 using AKNet.Common;
 
-namespace AKNet.Tcp.Server
+namespace AKNet.Quic.Server
 {
     public class TcpNetServerMain : NetServerInterface
     {

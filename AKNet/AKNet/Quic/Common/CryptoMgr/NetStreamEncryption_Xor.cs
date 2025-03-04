@@ -10,7 +10,7 @@ using AKNet.Common;
 using System;
 using System.Runtime.CompilerServices;
 
-namespace AKNet.Tcp.Common
+namespace AKNet.Quic.Common
 {
     internal class NetStreamEncryption_Xor : NetStreamEncryptionInterface
     {

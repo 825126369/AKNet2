@@ -9,7 +9,7 @@
 using System.Net;
 using System.Net.Sockets;
 
-namespace AKNet.Tcp.Server
+namespace AKNet.Quic.Server
 {
     public interface TcpClientPeerBase
     {

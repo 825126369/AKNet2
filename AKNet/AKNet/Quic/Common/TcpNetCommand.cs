@@ -6,7 +6,7 @@
 *        ModifyTime:2025/2/27 22:28:11
 *        Copyright:MIT软件许可证
 ************************************Copyright*****************************************/
-namespace AKNet.Tcp.Common
+namespace AKNet.Quic.Common
 {
     internal static class TcpNetCommand
     {

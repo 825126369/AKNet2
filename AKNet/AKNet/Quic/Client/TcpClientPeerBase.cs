@@ -8,7 +8,7 @@
 ************************************Copyright*****************************************/
 using System;
 using AKNet.Common;
-namespace AKNet.Tcp.Client
+namespace AKNet.Quic.Client
 {
     public interface TcpClientPeerBase
     {

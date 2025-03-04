@@ -9,7 +9,7 @@
 using System;
 using System.Net.Sockets;
 
-namespace AKNet.Tcp.Common
+namespace AKNet.Quic.Common
 {
     internal static class TcpStaticCommon
     {

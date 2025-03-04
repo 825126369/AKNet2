@@ -9,7 +9,7 @@
 using AKNet.Common;
 using System;
 
-namespace AKNet.Tcp.Client
+namespace AKNet.Quic.Client
 {
     public class TcpNetClientMain : NetClientInterface, ClientPeerBase
     {

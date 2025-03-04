@@ -10,7 +10,7 @@ using AKNet.Common;
 using System.Collections.Generic;
 using System.Net.Sockets;
 
-namespace AKNet.Tcp.Server
+namespace AKNet.Quic.Server
 {
     internal class ClientPeerManager
 	{

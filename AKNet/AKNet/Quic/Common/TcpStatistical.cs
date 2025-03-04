@@ -8,7 +8,7 @@
 ************************************Copyright*****************************************/
 using AKNet.Common;
 
-namespace AKNet.Tcp.Common
+namespace AKNet.Quic.Common
 {
     public static class TcpStatistical
     {

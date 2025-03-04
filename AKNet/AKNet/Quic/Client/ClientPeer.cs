@@ -7,10 +7,10 @@
 *        Copyright:MIT软件许可证
 ************************************Copyright*****************************************/
 using AKNet.Common;
-using AKNet.Tcp.Common;
+using AKNet.Quic.Common;
 using System;
 
-namespace AKNet.Tcp.Client
+namespace AKNet.Quic.Client
 {
     internal class ClientPeer : TcpClientPeerBase, TcpClientPeerCommonBase, ClientPeerBase
     {

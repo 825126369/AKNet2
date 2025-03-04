@@ -9,7 +9,7 @@
 using AKNet.Common;
 using System.Collections.Generic;
 
-namespace AKNet.Tcp.Server
+namespace AKNet.Quic.Server
 {
     internal class ClientPeerPool
     {

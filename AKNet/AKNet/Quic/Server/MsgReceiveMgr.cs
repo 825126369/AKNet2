@@ -9,9 +9,9 @@
 using System;
 using System.Net.Sockets;
 using AKNet.Common;
-using AKNet.Tcp.Common;
+using AKNet.Quic.Common;
 
-namespace AKNet.Tcp.Server
+namespace AKNet.Quic.Server
 {
     internal class MsgReceiveMgr
 	{

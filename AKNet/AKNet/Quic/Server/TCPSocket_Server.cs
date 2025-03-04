@@ -7,13 +7,13 @@
 *        Copyright:MIT软件许可证
 ************************************Copyright*****************************************/
 using AKNet.Common;
-using AKNet.Tcp.Common;
+using AKNet.Quic.Common;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 
-namespace AKNet.Tcp.Server
+namespace AKNet.Quic.Server
 {
 	internal class TCPSocket_Server
 	{
