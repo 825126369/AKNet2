@@ -7,13 +7,12 @@
 *        Copyright:MIT软件许可证
 ************************************Copyright*****************************************/
 using AKNet.Common;
-using System;
 
 namespace AKNet.Quic.Common
 {
     internal interface NetStreamEncryptionInterface
     {
-        ReadOnlySpan<byte> Encode(ushort nPackageId, ReadOnlySpan<byte> mBufferSegment);
+        Memory<byte> Encode(ushort nPackageId, ReadOnlySpan<byte> mBufferSegment);
         bool Decode(AkCircularBuffer mReceiveStreamList, TcpNetPackage mPackage);
     }
 
@@ -33,18 +32,10 @@ namespace AKNet.Quic.Common
             //password1 = "2024/11/23-0208";
             //password2 = "2026/11/23-0208";
 
-            if (nECryptoType == ECryptoType.Xor)
-            {
-                var mCryptoInterface = new XORCrypto(password1);
-                mNetStreamEncryption = new NetStreamEncryption_Xor(mCryptoInterface);
-            }
-            else
-            {
-                mNetStreamEncryption = new NetStreamEncryption();
-            }
+            mNetStreamEncryption = new NetStreamEncryption();
         }
 
-        public ReadOnlySpan<byte> Encode(ushort nPackageId, ReadOnlySpan<byte> mBufferSegment)
+        public Memory<byte> Encode(ushort nPackageId, ReadOnlySpan<byte> mBufferSegment)
         {
 #if DEBUG
             if (mBufferSegment.Length > Config.nDataMaxLength)

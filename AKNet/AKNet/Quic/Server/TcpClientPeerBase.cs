@@ -7,6 +7,7 @@
 *        Copyright:MIT软件许可证
 ************************************Copyright*****************************************/
 using System.Net;
+using System.Net.Quic;
 using System.Net.Sockets;
 
 namespace AKNet.Quic.Server
@@ -14,7 +15,7 @@ namespace AKNet.Quic.Server
     public interface TcpClientPeerBase
     {
         void SetName(string Name);
-        void HandleConnectedSocket(Socket mSocket);
+        void HandleConnectedSocket(QuicConnection mQuicConnection);
         void Update(double elapsed);
         void Reset();
         IPEndPoint GetIPEndPoint();

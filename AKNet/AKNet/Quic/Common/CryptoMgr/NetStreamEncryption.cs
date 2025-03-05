@@ -6,9 +6,8 @@
 *        ModifyTime:2025/2/27 22:28:11
 *        Copyright:MIT软件许可证
 ************************************Copyright*****************************************/
-using System;
-using System.Runtime.CompilerServices;
 using AKNet.Common;
+using System.Runtime.CompilerServices;
 
 namespace AKNet.Quic.Common
 {
@@ -69,7 +68,7 @@ namespace AKNet.Quic.Common
 			return true;
 		}
 
-		public ReadOnlySpan<byte> Encode(ushort nPackageId, ReadOnlySpan<byte> mBufferSegment)
+		public Memory<byte> Encode(ushort nPackageId, ReadOnlySpan<byte> mBufferSegment)
 		{
 			int nSumLength = mBufferSegment.Length + nPackageFixedHeadSize;
 			EnSureSendBufferOk(nSumLength);
@@ -78,8 +77,8 @@ namespace AKNet.Quic.Common
             EndianBitConverter.SetBytes(mCacheSendBuffer, 4, nPackageId);
             EndianBitConverter.SetBytes(mCacheSendBuffer, 6, (ushort)mBufferSegment.Length);
 
-            Span<byte> mCacheSendBufferSpan = mCacheSendBuffer.AsSpan();
-            mBufferSegment.CopyTo(mCacheSendBufferSpan.Slice(nPackageFixedHeadSize));
+            Memory<byte> mCacheSendBufferSpan = mCacheSendBuffer;
+            mBufferSegment.CopyTo(mCacheSendBufferSpan.Span.Slice(nPackageFixedHeadSize));
 			return mCacheSendBufferSpan.Slice(0, nSumLength);
 		}
 

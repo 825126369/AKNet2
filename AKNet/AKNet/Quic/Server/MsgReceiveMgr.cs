@@ -18,8 +18,8 @@ namespace AKNet.Quic.Server
 		private readonly AkCircularBuffer mReceiveStreamList = new AkCircularBuffer();
 		private readonly object lock_mReceiveStreamList_object = new object();
 		private ClientPeer mClientPeer;
-		private TcpServer mTcpServer;
-        public MsgReceiveMgr(ClientPeer mClientPeer, TcpServer mTcpServer)
+		private QuicServer mTcpServer;
+        public MsgReceiveMgr(ClientPeer mClientPeer, QuicServer mTcpServer)
 		{
 			this.mTcpServer = mTcpServer;
 			this.mClientPeer = mClientPeer;
@@ -53,11 +53,11 @@ namespace AKNet.Quic.Server
 			}
 		}
 		
-        public void MultiThreadingReceiveSocketStream(SocketAsyncEventArgs e)
+        public void MultiThreadingReceiveSocketStream(ReadOnlySpan<byte> e)
 		{
 			lock (lock_mReceiveStreamList_object)
 			{
-                mReceiveStreamList.WriteFrom(e.Buffer, e.Offset, e.BytesTransferred);
+                mReceiveStreamList.WriteFrom(e);
 			}
 		}
 

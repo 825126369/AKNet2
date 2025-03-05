@@ -7,18 +7,17 @@
 *        Copyright:MIT软件许可证
 ************************************Copyright*****************************************/
 using AKNet.Common;
-using System.Collections.Generic;
-using System.Net.Sockets;
+using System.Net.Quic;
 
 namespace AKNet.Quic.Server
 {
     internal class ClientPeerManager
 	{
 		private readonly List<ClientPeer> mClientList = new List<ClientPeer>(0);
-		private readonly Queue<Socket> mConnectSocketQueue = new Queue<Socket>();
-		private TcpServer mNetServer;
+		private readonly Queue<QuicConnection> mConnectSocketQueue = new Queue<QuicConnection>();
+		private QuicServer mNetServer;
 
-		public ClientPeerManager(TcpServer mNetServer)
+		public ClientPeerManager(QuicServer mNetServer)
 		{
 			this.mNetServer = mNetServer;
 		}
@@ -46,7 +45,7 @@ namespace AKNet.Quic.Server
 			}
 		}
 
-		public bool MultiThreadingHandleConnectedSocket(Socket mSocket)
+		public bool MultiThreadingHandleConnectedSocket(QuicConnection connection)
 		{
 			int nNowConnectCount = mClientList.Count + mConnectSocketQueue.Count;
 			if (nNowConnectCount >= mNetServer.mConfig.MaxPlayerCount)
@@ -60,7 +59,7 @@ namespace AKNet.Quic.Server
 			{
 				lock (mConnectSocketQueue)
 				{
-					mConnectSocketQueue.Enqueue(mSocket);
+					mConnectSocketQueue.Enqueue(connection);
 				}
 				return true;
 			}
@@ -68,15 +67,16 @@ namespace AKNet.Quic.Server
 
 		private bool CreateClientPeer()
 		{
-			Socket mSocket = null;
-			lock (mConnectSocketQueue)
+			QuicConnection connection = null;
+            lock (mConnectSocketQueue)
 			{
-				mConnectSocketQueue.TryDequeue(out mSocket);
+				mConnectSocketQueue.TryDequeue(out connection);
 			}
-			if (mSocket != null)
+
+			if (connection != null)
 			{
 				ClientPeer clientPeer = mNetServer.mClientPeerPool.Pop();
-				clientPeer.HandleConnectedSocket(mSocket);
+				clientPeer.HandleConnectedSocket(connection);
 				mClientList.Add(clientPeer);
                 PrintAddClientMsg(clientPeer);
 				return true;

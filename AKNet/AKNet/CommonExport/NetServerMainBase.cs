@@ -14,7 +14,7 @@ namespace AKNet.Common
         protected NetServerInterface mInterface = null;
         public NetServerMainBase()
         {
-            mInterface = new AKNet.Udp.POINTTOPOINT.Server.UdpNetServerMain();
+            mInterface = new AKNet.Quic.Server.QuicNetServerMain();
         }
 
         public NetServerMainBase(NetType nNetType = NetType.UDP)
@@ -23,21 +23,9 @@ namespace AKNet.Common
             {
                 mInterface = new AKNet.Tcp.Server.TcpNetServerMain();
             }
-            else if (nNetType == NetType.UDP)
+            else if (nNetType == NetType.Quic)
             {
-                mInterface = new AKNet.Udp.POINTTOPOINT.Server.UdpNetServerMain();
-            }
-            else if (nNetType == NetType.Udp2Tcp)
-            {
-                mInterface = new AKNet.Udp2Tcp.Server.Udp2TcpNetServerMain();
-            }
-            else if (nNetType == NetType.Udp3Tcp)
-            {
-                mInterface = new AKNet.Udp3Tcp.Server.Udp3TcpNetServerMain();
-            }
-            else if (nNetType == NetType.Udp4LinuxTcp)
-            {
-                mInterface = new AKNet.Udp4LinuxTcp.Server.Udp4LinuxTcpNetServerMain();
+                mInterface = new AKNet.Quic.Server.QuicNetServerMain();
             }
             else
             {
@@ -56,18 +44,6 @@ namespace AKNet.Common
             if (IConfig is TcpConfig)
             {
                 mInterface = new AKNet.Tcp.Server.TcpNetServerMain();
-            }
-            else if (IConfig is UdpConfig)
-            {
-                mInterface = new AKNet.Udp.POINTTOPOINT.Server.UdpNetServerMain();
-            }
-            else if (IConfig is Udp2TcpConfig)
-            {
-                mInterface = new AKNet.Udp2Tcp.Server.Udp2TcpNetServerMain();
-            }
-            else if (IConfig is Udp3TcpConfig)
-            {
-                mInterface = new AKNet.Udp3Tcp.Server.Udp3TcpNetServerMain();
             }
             else
             {

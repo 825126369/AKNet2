@@ -14,7 +14,7 @@ namespace AKNet.Common
         protected NetClientInterface mInterface = null;
         public NetClientMainBase()
         {
-            mInterface = new AKNet.Udp.POINTTOPOINT.Client.UdpNetClientMain();
+            mInterface = new AKNet.Quic.Client.QuicNetClientMain();
         }
 
         public NetClientMainBase(NetType nNetType = NetType.UDP)
@@ -23,21 +23,9 @@ namespace AKNet.Common
             {
                 mInterface = new AKNet.Tcp.Client.TcpNetClientMain();
             }
-            else if (nNetType == NetType.UDP)
+            else if (nNetType == NetType.Quic)
             {
-                mInterface = new AKNet.Udp.POINTTOPOINT.Client.UdpNetClientMain();
-            }
-            else if (nNetType == NetType.Udp2Tcp)
-            {
-                mInterface = new AKNet.Udp2Tcp.Client.Udp2TcpNetClientMain();
-            }
-            else if (nNetType == NetType.Udp3Tcp)
-            {
-                mInterface = new AKNet.Udp3Tcp.Client.Udp3TcpNetClientMain();
-            }
-            else if (nNetType == NetType.Udp4LinuxTcp)
-            {
-                mInterface = new AKNet.Udp4LinuxTcp.Client.Udp4LinuxTcpNetClientMain();
+                mInterface = new AKNet.Quic.Client.QuicNetClientMain();
             }
             else
             {
@@ -56,18 +44,6 @@ namespace AKNet.Common
             if (IConfig is TcpConfig)
             {
                 mInterface = new AKNet.Tcp.Client.TcpNetClientMain(IConfig as TcpConfig);
-            }
-            else if (IConfig is UdpConfig)
-            {
-                mInterface = new AKNet.Udp.POINTTOPOINT.Client.UdpNetClientMain(IConfig as UdpConfig);
-            }
-            else if (IConfig is Udp2TcpConfig)
-            {
-                mInterface = new AKNet.Udp2Tcp.Client.Udp2TcpNetClientMain(IConfig as Udp2TcpConfig);
-            }
-            else if (IConfig is Udp3TcpConfig)
-            {
-                mInterface = new AKNet.Udp3Tcp.Client.Udp3TcpNetClientMain(IConfig as Udp3TcpConfig);
             }
             else
             {

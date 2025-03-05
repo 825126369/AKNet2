@@ -14,7 +14,7 @@ namespace AKNet.Quic.Server
     internal class ClientPeerPool
     {
         readonly Stack<ClientPeer> mObjectPool = new Stack<ClientPeer>();
-        TcpServer mTcpServer = null;
+        QuicServer mTcpServer = null;
         private int nMaxCapacity = 0;
         private ClientPeer GenerateObject()
         {
@@ -22,7 +22,7 @@ namespace AKNet.Quic.Server
             return clientPeer;
         }
 
-        public ClientPeerPool(TcpServer mTcpServer, int initCapacity = 0, int nMaxCapacity = 0)
+        public ClientPeerPool(QuicServer mTcpServer, int initCapacity = 0, int nMaxCapacity = 0)
         {
             this.mTcpServer = mTcpServer;
             SetMaxCapacity(nMaxCapacity);

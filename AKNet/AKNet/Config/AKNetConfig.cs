@@ -16,6 +16,7 @@ namespace AKNet.Common
     public enum NetType
     {
         TCP,
+        Quic,
         UDP,
         Udp2Tcp,
         Udp3Tcp,

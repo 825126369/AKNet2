@@ -54,11 +54,11 @@ namespace AKNet.Quic.Client
 			}
 		}
 
-        public void MultiThreadingReceiveSocketStream(SocketAsyncEventArgs e)
+        public void MultiThreadingReceiveSocketStream(ReadOnlySpan<byte> e)
 		{
 			lock (mReceiveStreamList)
 			{
-                mReceiveStreamList.WriteFrom(e.Buffer, e.Offset, e.BytesTransferred);
+                mReceiveStreamList.WriteFrom(e);
             }
         }
 

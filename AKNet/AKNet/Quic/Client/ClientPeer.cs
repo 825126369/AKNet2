@@ -12,9 +12,9 @@ using System;
 
 namespace AKNet.Quic.Client
 {
-    internal class ClientPeer : TcpClientPeerBase, TcpClientPeerCommonBase, ClientPeerBase
+    internal class ClientPeer : QuicClientPeerBase, TcpClientPeerCommonBase, ClientPeerBase
     {
-        internal readonly TCPSocketMgr mSocketMgr;
+        internal readonly QuicConnectionMgr mSocketMgr;
         internal readonly MsgReceiveMgr mMsgReceiveMgr;
         internal readonly CryptoMgr mCryptoMgr;
         internal readonly Config mConfig;
@@ -44,7 +44,7 @@ namespace AKNet.Quic.Client
             mCryptoMgr = new CryptoMgr(mConfig);
             mPackageManager = new ListenNetPackageMgr();
             mListenClientPeerStateMgr = new ListenClientPeerStateMgr();
-            mSocketMgr = new TCPSocketMgr(this);
+            mSocketMgr = new QuicConnectionMgr(this);
             mMsgReceiveMgr = new MsgReceiveMgr(this);
         }
 
@@ -151,7 +151,7 @@ namespace AKNet.Quic.Client
             if (GetSocketState() == SOCKET_PEER_STATE.CONNECTED)
             {
                 ResetSendHeartBeatTime();
-                ReadOnlySpan<byte> mBufferSegment = mCryptoMgr.Encode(nPackageId, ReadOnlySpan<byte>.Empty);
+                var mBufferSegment = mCryptoMgr.Encode(nPackageId, ReadOnlySpan<byte>.Empty);
                 mSocketMgr.SendNetStream(mBufferSegment);
             }
             else
@@ -165,7 +165,7 @@ namespace AKNet.Quic.Client
             if (GetSocketState() == SOCKET_PEER_STATE.CONNECTED)
             {
                 ResetSendHeartBeatTime();
-                ReadOnlySpan<byte> mBufferSegment = mCryptoMgr.Encode(nPackageId, data);
+                var mBufferSegment = mCryptoMgr.Encode(nPackageId, data);
                 mSocketMgr.SendNetStream(mBufferSegment);
             }
             else
@@ -179,7 +179,7 @@ namespace AKNet.Quic.Client
             if (GetSocketState() == SOCKET_PEER_STATE.CONNECTED)
             {
                 ResetSendHeartBeatTime();
-                ReadOnlySpan<byte> mBufferSegment = mCryptoMgr.Encode(mNetPackage.GetPackageId(), mNetPackage.GetData());
+                var mBufferSegment = mCryptoMgr.Encode(mNetPackage.GetPackageId(), mNetPackage.GetData());
                 mSocketMgr.SendNetStream(mBufferSegment);
             }
             else
@@ -193,7 +193,7 @@ namespace AKNet.Quic.Client
             if (GetSocketState() == SOCKET_PEER_STATE.CONNECTED)
             {
                 ResetSendHeartBeatTime();
-                ReadOnlySpan<byte> mBufferSegment = mCryptoMgr.Encode(nPackageId, buffer);
+                var mBufferSegment = mCryptoMgr.Encode(nPackageId, buffer);
                 mSocketMgr.SendNetStream(mBufferSegment);
             }
             else
