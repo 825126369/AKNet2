@@ -13,43 +13,35 @@ namespace AKNet.Common
             if (store.Certificates.Count > 0)
             {
                 cert = store.Certificates[^1];
-
-                // rotate key after it expires
                 if (DateTime.Parse(cert.GetExpirationDateString(), null) < DateTimeOffset.UtcNow)
                 {
                     cert = null;
                 }
             }
+
             if (cert == null)
             {
-                // generate a new cert
                 var now = DateTimeOffset.UtcNow;
                 SubjectAlternativeNameBuilder sanBuilder = new();
                 sanBuilder.AddDnsName("localhost");
                 using var ec = ECDsa.Create(ECCurve.NamedCurves.nistP256);
                 CertificateRequest req = new("CN=localhost", ec, HashAlgorithmName.SHA256);
-                // Adds purpose
                 req.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(new OidCollection
-        {
-            new("1.3.6.1.5.5.7.3.1") // serverAuth
+                {
+                    new("1.3.6.1.5.5.7.3.1")
 
-        }, false));
-                // Adds usage
+                }, false));
+
                 req.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature, false));
-                // Adds subject alternate names
                 req.CertificateExtensions.Add(sanBuilder.Build());
-                // Sign
-                using var crt = req.CreateSelfSigned(now, now.AddDays(14)); // 14 days is the max duration of a certificate for this
-                cert = new(crt.Export(X509ContentType.Pfx));
-
-                // Save
+                using var crt = req.CreateSelfSigned(now, now.AddDays(14));
+                cert = X509CertificateLoader.LoadCertificate(crt.Export(X509ContentType.Pfx));
                 store.Add(cert);
             }
-            store.Close();
 
+            store.Close();
             var hash = SHA256.HashData(cert.RawData);
             var certStr = Convert.ToBase64String(hash);
-            //Console.WriteLine($"\n\n\n\n\nCertificate: {certStr}\n\n\n\n"); // <-- you will need to put this output into the JS API call to allow the connection
             return cert;
         }
 

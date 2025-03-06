@@ -98,7 +98,7 @@ namespace AKNet.Quic.Server
             return mOption;
         }
 
-        private async ValueTask<QuicServerConnectionOptions> ConnectionOptionsCallback(QuicConnection mQuicConnection, SslClientHelloInfo mSslClientHelloInfo, CancellationToken mCancellationToken)
+        private ValueTask<QuicServerConnectionOptions> ConnectionOptionsCallback(QuicConnection mQuicConnection, SslClientHelloInfo mSslClientHelloInfo, CancellationToken mCancellationToken)
         {
             QuicServerConnectionOptions serverConnectionOptions = new QuicServerConnectionOptions();
             var ApplicationProtocols = new List<SslApplicationProtocol>();
@@ -108,7 +108,7 @@ namespace AKNet.Quic.Server
             ServerAuthenticationOptions.ApplicationProtocols = ApplicationProtocols;
             ServerAuthenticationOptions.ServerCertificate = X509CertTool.GenerateManualCertificate();
             serverConnectionOptions.ServerAuthenticationOptions = ServerAuthenticationOptions;
-            return await ValueTask.FromResult(serverConnectionOptions);
+            return ValueTask.FromResult(serverConnectionOptions);
         }
 
         private async void StartProcessAccept()
