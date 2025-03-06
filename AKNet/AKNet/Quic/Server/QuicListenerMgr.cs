@@ -91,7 +91,7 @@ namespace AKNet.Quic.Server
         private QuicListenerOptions GetQuicListenerOptions(IPAddress mIPAddress, int nPort)
         {
             var ApplicationProtocols = new List<SslApplicationProtocol>();
-            ApplicationProtocols.Add(SslApplicationProtocol.Http2);
+            ApplicationProtocols.Add(SslApplicationProtocol.Http3);
 
             QuicListenerOptions mOption = new QuicListenerOptions();
             mOption.ListenEndPoint = new IPEndPoint(mIPAddress, nPort);
