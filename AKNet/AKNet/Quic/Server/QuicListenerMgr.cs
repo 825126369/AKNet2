@@ -1,7 +1,9 @@
 ﻿using AKNet.Common;
 using System.Net;
+using System.Net.Mail;
 using System.Net.Quic;
 using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 
 namespace AKNet.Quic.Server
 {
@@ -60,27 +62,58 @@ namespace AKNet.Quic.Server
             }
 
             this.nPort = nPort;
-            mState = SOCKET_SERVER_STATE.NORMAL;
+            this.mState = SOCKET_SERVER_STATE.NORMAL;
 
-            var serverConnectionOptions = new QuicServerConnectionOptions
+            try
             {
-                DefaultStreamErrorCode = 0x0A,
-                DefaultCloseErrorCode = 0x0B,
-
-                ServerAuthenticationOptions = new SslServerAuthenticationOptions
+                var mQuicListener = await QuicListener.ListenAsync(GetQuicListenerOptions(mIPAddress, nPort));
+                if (mQuicListener != null)
                 {
-                    ApplicationProtocols = [new SslApplicationProtocol("protocol-name")],
-                   // ServerCertificate = serverCertificate
+                    StartProcessAccept();
                 }
-            };
+                else
+                {
 
-            mQuicListener = await QuicListener.ListenAsync(new QuicListenerOptions
+                }
+            }
+            catch (QuicException e)
             {
-                ListenEndPoint = new IPEndPoint(mIPAddress, nPort),
-                ApplicationProtocols = [new SslApplicationProtocol("protocol-name")],
-                ConnectionOptionsCallback = (_, _, _) => ValueTask.FromResult(serverConnectionOptions)
-            });
-            StartProcessAccept();
+                this.mState = SOCKET_SERVER_STATE.EXCEPTION;
+                NetLog.LogError(e.QuicError + " | " + e.StackTrace);
+            }
+            catch (Exception e)
+            {
+                this.mState = SOCKET_SERVER_STATE.EXCEPTION;
+                NetLog.LogError(e.Message + " | " + e.StackTrace);
+            }
+        }
+
+        private QuicListenerOptions GetQuicListenerOptions(IPAddress mIPAddress, int nPort)
+        {
+            var ApplicationProtocols = new List<SslApplicationProtocol>();
+            ApplicationProtocols.Add(SslApplicationProtocol.Http2);
+
+            QuicListenerOptions mOption = new QuicListenerOptions();
+            mOption.ListenEndPoint = new IPEndPoint(mIPAddress, nPort);
+            mOption.ApplicationProtocols = ApplicationProtocols;
+            mOption.ConnectionOptionsCallback = ConnectionOptionsCallback;
+            return mOption;
+        }
+
+        private async ValueTask<QuicServerConnectionOptions> ConnectionOptionsCallback(QuicConnection mQuicConnection, SslClientHelloInfo mSslClientHelloInfo, CancellationToken mCancellationToken)
+        {
+            string path =  "server.pfx";
+            var serverCertificate = X509Certificate2.CreateFromEncryptedPemFile(path, "123456");
+            //var serverCertificate = X509CertificateLoader.LoadCertificateFromFile("path/to/cert.pfx");
+            QuicServerConnectionOptions serverConnectionOptions = new QuicServerConnectionOptions();
+            var ApplicationProtocols = new List<SslApplicationProtocol>();
+            ApplicationProtocols.Add(SslApplicationProtocol.Http3);
+
+            var ServerAuthenticationOptions = new SslServerAuthenticationOptions();
+            ServerAuthenticationOptions.ApplicationProtocols = ApplicationProtocols;
+            ServerAuthenticationOptions.ServerCertificate = serverCertificate;
+            serverConnectionOptions.ServerAuthenticationOptions = ServerAuthenticationOptions;
+            return await ValueTask.FromResult(serverConnectionOptions);
         }
 
         private async void StartProcessAccept()

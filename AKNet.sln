@@ -1,11 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35818.85 d17.13
+VisualStudioVersion = 17.13.35818.85
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AKNet", "AKNet\AKNet.csproj", "{49754D35-E5B4-425C-B469-6CD76C7F6B22}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AKNet.Extentions.Protobuf", "AKNet.Extentions.Protobuf\AKNet.Extentions.Protobuf.csproj", "{436E684D-7574-62F0-33BD-1ED7D93FFB3E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestNetClient", "TestNetClient\TestNetClient.csproj", "{DC8E5788-ACF9-CA86-FE5C-CDCD369C0343}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestNetServer", "TestNetServer\TestNetServer.csproj", "{FFC09D13-123E-7ACA-F0F6-2403E58DDFC1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestCommon", "TestCommon\TestCommon.csproj", "{2AC2C9AE-F049-8CC1-EB60-F26685B0E93E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +27,18 @@ Global
 		{436E684D-7574-62F0-33BD-1ED7D93FFB3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{436E684D-7574-62F0-33BD-1ED7D93FFB3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{436E684D-7574-62F0-33BD-1ED7D93FFB3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC8E5788-ACF9-CA86-FE5C-CDCD369C0343}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC8E5788-ACF9-CA86-FE5C-CDCD369C0343}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC8E5788-ACF9-CA86-FE5C-CDCD369C0343}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC8E5788-ACF9-CA86-FE5C-CDCD369C0343}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FFC09D13-123E-7ACA-F0F6-2403E58DDFC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFC09D13-123E-7ACA-F0F6-2403E58DDFC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFC09D13-123E-7ACA-F0F6-2403E58DDFC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFC09D13-123E-7ACA-F0F6-2403E58DDFC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AC2C9AE-F049-8CC1-EB60-F26685B0E93E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AC2C9AE-F049-8CC1-EB60-F26685B0E93E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AC2C9AE-F049-8CC1-EB60-F26685B0E93E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AC2C9AE-F049-8CC1-EB60-F26685B0E93E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
