@@ -1,9 +1,7 @@
 ﻿using AKNet.Common;
 using System.Net;
-using System.Net.Mail;
 using System.Net.Quic;
 using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 
 namespace AKNet.Quic.Server
 {
@@ -102,16 +100,13 @@ namespace AKNet.Quic.Server
 
         private async ValueTask<QuicServerConnectionOptions> ConnectionOptionsCallback(QuicConnection mQuicConnection, SslClientHelloInfo mSslClientHelloInfo, CancellationToken mCancellationToken)
         {
-            string path =  "server.pfx";
-            var serverCertificate = X509Certificate2.CreateFromEncryptedPemFile(path, "123456");
-            //var serverCertificate = X509CertificateLoader.LoadCertificateFromFile("path/to/cert.pfx");
             QuicServerConnectionOptions serverConnectionOptions = new QuicServerConnectionOptions();
             var ApplicationProtocols = new List<SslApplicationProtocol>();
             ApplicationProtocols.Add(SslApplicationProtocol.Http3);
 
             var ServerAuthenticationOptions = new SslServerAuthenticationOptions();
             ServerAuthenticationOptions.ApplicationProtocols = ApplicationProtocols;
-            ServerAuthenticationOptions.ServerCertificate = serverCertificate;
+            ServerAuthenticationOptions.ServerCertificate = X509CertTool.GenerateManualCertificate();
             serverConnectionOptions.ServerAuthenticationOptions = ServerAuthenticationOptions;
             return await ValueTask.FromResult(serverConnectionOptions);
         }
