@@ -86,10 +86,13 @@ namespace AKNet.Quic.Server
             }
         }
 
-        private QuicListenerOptions GetQuicListenerOptions(IPAddress mIPAddress, int nPort)
+        private static QuicListenerOptions GetQuicListenerOptions(IPAddress mIPAddress, int nPort)
         {
             var ApplicationProtocols = new List<SslApplicationProtocol>();
             ApplicationProtocols.Add(SslApplicationProtocol.Http3);
+            ApplicationProtocols.Add(SslApplicationProtocol.Http11);
+            ApplicationProtocols.Add(SslApplicationProtocol.Http2);
+            ApplicationProtocols.Add(new SslApplicationProtocol("test"));
 
             QuicListenerOptions mOption = new QuicListenerOptions();
             mOption.ListenEndPoint = new IPEndPoint(mIPAddress, nPort);
@@ -98,16 +101,22 @@ namespace AKNet.Quic.Server
             return mOption;
         }
 
-        private ValueTask<QuicServerConnectionOptions> ConnectionOptionsCallback(QuicConnection mQuicConnection, SslClientHelloInfo mSslClientHelloInfo, CancellationToken mCancellationToken)
+        private static ValueTask<QuicServerConnectionOptions> ConnectionOptionsCallback(QuicConnection mQuicConnection, SslClientHelloInfo mSslClientHelloInfo, CancellationToken mCancellationToken)
         {
             QuicServerConnectionOptions serverConnectionOptions = new QuicServerConnectionOptions();
             var ApplicationProtocols = new List<SslApplicationProtocol>();
             ApplicationProtocols.Add(SslApplicationProtocol.Http3);
+            ApplicationProtocols.Add(SslApplicationProtocol.Http11);
+            ApplicationProtocols.Add(SslApplicationProtocol.Http2);
+            ApplicationProtocols.Add(new SslApplicationProtocol("test"));
 
             var ServerAuthenticationOptions = new SslServerAuthenticationOptions();
             ServerAuthenticationOptions.ApplicationProtocols = ApplicationProtocols;
             ServerAuthenticationOptions.ServerCertificate = X509CertTool.GenerateManualCertificate();
             serverConnectionOptions.ServerAuthenticationOptions = ServerAuthenticationOptions;
+            serverConnectionOptions.DefaultCloseErrorCode = 0x0A;
+            serverConnectionOptions.DefaultStreamErrorCode = 0x0B;
+
             return ValueTask.FromResult(serverConnectionOptions);
         }
 

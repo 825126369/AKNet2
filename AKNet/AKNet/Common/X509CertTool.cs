@@ -7,12 +7,57 @@ namespace AKNet.Common
     {
         public static X509Certificate2 GenerateManualCertificate()
         {
+            string subjectName = "CN=localhost"; // 替换为你的主机名或域名
+            string friendlyName = "QUIC Test Certificate";
+            string exportPassword = "password"; // 导出证书时使用的密码
+            string exportFilePath = "quic_test_certificate.pfx"; // 导出的 PFX 文件路径
+            
+            X509Certificate2 certificate = CreateSelfSignedCertificate(subjectName, friendlyName);
+            return certificate;
+
+            byte[] pfxBytes = certificate.Export(X509ContentType.Pfx, exportPassword);
+            File.WriteAllBytes(exportFilePath, pfxBytes);
+            Console.WriteLine($"证书已创建并导出到 {exportFilePath}");
+        }
+
+        static X509Certificate2 CreateSelfSignedCertificate(string subjectName, string friendlyName)
+        {
+            using (RSA rsa = RSA.Create(2048)) // 使用 2048 位 RSA 密钥
+            {
+                var certificateRequest = new CertificateRequest(
+                    subjectName,
+                    rsa,
+                    HashAlgorithmName.SHA256,
+                    RSASignaturePadding.Pkcs1
+                );
+
+                // 添加扩展属性（如需要）
+                certificateRequest.CertificateExtensions.Add(
+                    new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment, critical: false)
+                );
+
+                // 创建证书
+                X509Certificate2 certificate = certificateRequest.CreateSelfSigned(
+                    notBefore: DateTime.UtcNow.AddDays(-1),
+                    notAfter: DateTime.UtcNow.AddYears(1)
+                );
+
+                // 设置友好名称
+                certificate.FriendlyName = friendlyName;
+
+                return certificate;
+            }
+        }
+
+
+        public static X509Certificate2 GenerateManualCertificate1()
+        {
             X509Certificate2 cert = null;
             var store = new X509Store("KestrelWebTransportCertificates", StoreLocation.CurrentUser);
             store.Open(OpenFlags.ReadWrite);
             if (store.Certificates.Count > 0)
             {
-                cert = store.Certificates[^1];
+                cert = store.Certificates[0];
                 if (DateTime.Parse(cert.GetExpirationDateString(), null) < DateTimeOffset.UtcNow)
                 {
                     cert = null;
