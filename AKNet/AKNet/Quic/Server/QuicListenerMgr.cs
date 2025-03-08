@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Quic;
 using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 
 namespace AKNet.Quic.Server
 {
@@ -64,14 +65,15 @@ namespace AKNet.Quic.Server
 
             try
             {
-                var mQuicListener = await QuicListener.ListenAsync(GetQuicListenerOptions(mIPAddress, nPort));
+                var options = GetQuicListenerOptions(mIPAddress, nPort);
+                var mQuicListener = await QuicListener.ListenAsync(options);
                 if (mQuicListener != null)
                 {
                     StartProcessAccept();
                 }
                 else
                 {
-
+                   
                 }
             }
             catch (QuicException e)
@@ -89,15 +91,13 @@ namespace AKNet.Quic.Server
         private static QuicListenerOptions GetQuicListenerOptions(IPAddress mIPAddress, int nPort)
         {
             var ApplicationProtocols = new List<SslApplicationProtocol>();
-            ApplicationProtocols.Add(SslApplicationProtocol.Http3);
-            ApplicationProtocols.Add(SslApplicationProtocol.Http11);
-            ApplicationProtocols.Add(SslApplicationProtocol.Http2);
             ApplicationProtocols.Add(new SslApplicationProtocol("test"));
 
             QuicListenerOptions mOption = new QuicListenerOptions();
-            mOption.ListenEndPoint = new IPEndPoint(mIPAddress, nPort);
+            mOption.ListenEndPoint = new IPEndPoint(IPAddress.Loopback, 12345);
             mOption.ApplicationProtocols = ApplicationProtocols;
             mOption.ConnectionOptionsCallback = ConnectionOptionsCallback;
+            mOption.ListenBacklog = 10;
             return mOption;
         }
 
@@ -108,11 +108,10 @@ namespace AKNet.Quic.Server
             ApplicationProtocols.Add(SslApplicationProtocol.Http3);
             ApplicationProtocols.Add(SslApplicationProtocol.Http11);
             ApplicationProtocols.Add(SslApplicationProtocol.Http2);
-            ApplicationProtocols.Add(new SslApplicationProtocol("test"));
 
             var ServerAuthenticationOptions = new SslServerAuthenticationOptions();
             ServerAuthenticationOptions.ApplicationProtocols = ApplicationProtocols;
-            ServerAuthenticationOptions.ServerCertificate = X509CertTool.GenerateManualCertificate();
+            ServerAuthenticationOptions.ServerCertificate = X509CertTool.GetCert();
             serverConnectionOptions.ServerAuthenticationOptions = ServerAuthenticationOptions;
             serverConnectionOptions.DefaultCloseErrorCode = 0x0A;
             serverConnectionOptions.DefaultStreamErrorCode = 0x0B;
