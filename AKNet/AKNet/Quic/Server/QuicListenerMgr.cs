@@ -79,12 +79,12 @@ namespace AKNet.Quic.Server
             catch (QuicException e)
             {
                 this.mState = SOCKET_SERVER_STATE.EXCEPTION;
-                NetLog.LogError(e.QuicError + " | " + e.StackTrace);
+                NetLog.LogError(e.ToString());
             }
             catch (Exception e)
             {
                 this.mState = SOCKET_SERVER_STATE.EXCEPTION;
-                NetLog.LogError(e.Message + " | " + e.StackTrace);
+                NetLog.LogError(e.ToString());
             }
         }
 
