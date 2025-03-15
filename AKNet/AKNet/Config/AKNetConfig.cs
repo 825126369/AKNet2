@@ -17,9 +17,5 @@ namespace AKNet.Common
     {
         TCP,
         Quic,
-        UDP,
-        Udp2Tcp,
-        Udp3Tcp,
-        Udp4LinuxTcp,
     }
 }

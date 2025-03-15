@@ -17,7 +17,7 @@ namespace AKNet.Common
             mInterface = new AKNet.Quic.Client.QuicNetClientMain();
         }
 
-        public NetClientMainBase(NetType nNetType = NetType.UDP)
+        public NetClientMainBase(NetType nNetType = NetType.Quic)
         {
             if (nNetType == NetType.TCP)
             {

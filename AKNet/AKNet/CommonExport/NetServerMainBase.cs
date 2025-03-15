@@ -17,7 +17,7 @@ namespace AKNet.Common
             mInterface = new AKNet.Quic.Server.QuicNetServerMain();
         }
 
-        public NetServerMainBase(NetType nNetType = NetType.UDP)
+        public NetServerMainBase(NetType nNetType = NetType.Quic)
         {
             if (nNetType == NetType.TCP)
             {

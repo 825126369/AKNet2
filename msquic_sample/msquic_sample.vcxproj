@@ -130,16 +130,30 @@
     <ClCompile Include="..\..\msquic-main\msquic-main\src\tools\sample\sample.c" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="..\..\msquic\build\INSTALL.vcxproj">
+      <Project>{44070b10-c196-3af7-8f22-0dd7fb11c10c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\msquic\build\MsQuicEtw_HeaderBuild.vcxproj">
+      <Project>{6367d474-b673-32e4-97ea-d1db93b160e9}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\msquic\build\MsQuicEtw_Resource.vcxproj">
+      <Project>{df843b16-22e3-3bc5-b289-b38e68c638f8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\msquic\build\RUN_TESTS.vcxproj">
+      <Project>{921b285e-d5c8-3dcb-8b0a-ee36f236308a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\msquic\build\src\bin\msquic.vcxproj">
+      <Project>{10561bb2-8fca-3292-8da2-628d59d8397f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\msquic\build\src\core\core.vcxproj">
+      <Project>{2a821822-58ba-3cbe-8ec9-9240e5545795}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\msquic\build\src\platform\msquic_platform.vcxproj">
+      <Project>{5086a877-927f-3d21-a879-a658d86aa1e0}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\msquic\build\ZERO_CHECK.vcxproj">
+      <Project>{256648a4-78e1-3127-bff6-cc448a146980}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\Microsoft.Native.Quic.MsQuic.OpenSSL.2.4.8\build\native\Microsoft.Native.Quic.MsQuic.openssl.targets" Condition="Exists('..\packages\Microsoft.Native.Quic.MsQuic.OpenSSL.2.4.8\build\native\Microsoft.Native.Quic.MsQuic.openssl.targets')" />
-  </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>这台计算机上缺少此项目引用的 NuGet 程序包。使用“NuGet 程序包还原”可下载这些程序包。有关更多信息，请参见 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的文件是 {0}。</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.Native.Quic.MsQuic.OpenSSL.2.4.8\build\native\Microsoft.Native.Quic.MsQuic.openssl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Native.Quic.MsQuic.OpenSSL.2.4.8\build\native\Microsoft.Native.Quic.MsQuic.openssl.targets'))" />
-  </Target>
 </Project>
