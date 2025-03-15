@@ -9,6 +9,7 @@
 using AKNet.Common;
 using System.Net;
 using System.Net.Quic;
+using System.Net.Security;
 
 namespace AKNet.Quic.Client
 {
@@ -55,12 +56,7 @@ namespace AKNet.Quic.Client
 				mIPEndPoint = new IPEndPoint(mIPAddress, ServerPort);
 			}
 
-			var clientOptions = new QuicClientConnectionOptions
-			{
-				RemoteEndPoint = mIPEndPoint
-			};
-
-			mQuicConnection = await QuicConnection.ConnectAsync(clientOptions);
+			mQuicConnection = await QuicConnection.ConnectAsync(GetQuicClientConnectionOptions(mIPEndPoint));
 			if (mQuicConnection == null)
 			{
 				mClientPeer.SetSocketState(SOCKET_PEER_STATE.RECONNECTING);
@@ -69,11 +65,28 @@ namespace AKNet.Quic.Client
 			{
 				mClientPeer.SetSocketState(SOCKET_PEER_STATE.CONNECTED);
 				StartProcessReceive();
-
             }
 		}
 
-		public bool DisConnectServer()
+        private QuicClientConnectionOptions GetQuicClientConnectionOptions(IPEndPoint mIPEndPoint)
+        {
+            QuicClientConnectionOptions mOption = new QuicClientConnectionOptions();
+            mOption.RemoteEndPoint = mIPEndPoint;
+            mOption.DefaultCloseErrorCode = 0x0A;
+            mOption.DefaultStreamErrorCode = 0x0B;
+            mOption.ClientAuthenticationOptions = new System.Net.Security.SslClientAuthenticationOptions();
+
+
+            var ApplicationProtocols = new List<SslApplicationProtocol>();
+            ApplicationProtocols.Add(SslApplicationProtocol.Http3);
+
+            mOption.ClientAuthenticationOptions.ApplicationProtocols = ApplicationProtocols;
+
+
+            return mOption;
+        }
+
+        public bool DisConnectServer()
 		{
 			NetLog.Log("客户端 主动 断开服务器 Begin......");
 			MainThreadCheck.Check();

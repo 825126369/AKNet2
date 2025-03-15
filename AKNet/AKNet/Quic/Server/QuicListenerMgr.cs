@@ -67,6 +67,8 @@ namespace AKNet.Quic.Server
             {
                 var options = GetQuicListenerOptions(mIPAddress, nPort);
                 var mQuicListener = await QuicListener.ListenAsync(options);
+
+                NetLog.Log("服务器 初始化成功: " + mIPAddress + " | " + nPort);
                 if (mQuicListener != null)
                 {
                     StartProcessAccept();
@@ -91,13 +93,12 @@ namespace AKNet.Quic.Server
         private static QuicListenerOptions GetQuicListenerOptions(IPAddress mIPAddress, int nPort)
         {
             var ApplicationProtocols = new List<SslApplicationProtocol>();
-            ApplicationProtocols.Add(new SslApplicationProtocol("test"));
+            ApplicationProtocols.Add(SslApplicationProtocol.Http3);
 
             QuicListenerOptions mOption = new QuicListenerOptions();
-            mOption.ListenEndPoint = new IPEndPoint(IPAddress.Loopback, 12345);
+            mOption.ListenEndPoint = new IPEndPoint(mIPAddress, nPort);
             mOption.ApplicationProtocols = ApplicationProtocols;
             mOption.ConnectionOptionsCallback = ConnectionOptionsCallback;
-            mOption.ListenBacklog = 10;
             return mOption;
         }
 
@@ -106,8 +107,6 @@ namespace AKNet.Quic.Server
             QuicServerConnectionOptions serverConnectionOptions = new QuicServerConnectionOptions();
             var ApplicationProtocols = new List<SslApplicationProtocol>();
             ApplicationProtocols.Add(SslApplicationProtocol.Http3);
-            ApplicationProtocols.Add(SslApplicationProtocol.Http11);
-            ApplicationProtocols.Add(SslApplicationProtocol.Http2);
 
             var ServerAuthenticationOptions = new SslServerAuthenticationOptions();
             ServerAuthenticationOptions.ApplicationProtocols = ApplicationProtocols;
