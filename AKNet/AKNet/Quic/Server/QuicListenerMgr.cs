@@ -1,4 +1,5 @@
 ﻿using AKNet.Common;
+using Microsoft.VisualBasic.FileIO;
 using System.Net;
 using System.Net.Quic;
 using System.Net.Security;
@@ -105,11 +106,13 @@ namespace AKNet.Quic.Server
             ServerAuthenticationOptions.ApplicationProtocols = ApplicationProtocols;
             ServerAuthenticationOptions.ServerCertificate = mCert;
             
-            QuicServerConnectionOptions serverConnectionOptions = new QuicServerConnectionOptions();
-            serverConnectionOptions.ServerAuthenticationOptions = ServerAuthenticationOptions;
-            serverConnectionOptions.DefaultCloseErrorCode = 0;
-            serverConnectionOptions.DefaultStreamErrorCode = 0;
-            return ValueTask.FromResult(serverConnectionOptions);
+            QuicServerConnectionOptions mOption = new QuicServerConnectionOptions();
+            mOption.ServerAuthenticationOptions = ServerAuthenticationOptions;
+            mOption.DefaultCloseErrorCode = 0;
+            mOption.DefaultStreamErrorCode = 0;
+            mOption.MaxInboundBidirectionalStreams = ushort.MaxValue;
+            mOption.MaxInboundUnidirectionalStreams = ushort.MaxValue;
+            return ValueTask.FromResult(mOption);
         }
 
         private async void StartProcessAccept()

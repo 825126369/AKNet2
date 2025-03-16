@@ -85,7 +85,8 @@ namespace AKNet.Quic.Client
             mOption.RemoteEndPoint = mIPEndPoint;
             mOption.DefaultCloseErrorCode = 0;
             mOption.DefaultStreamErrorCode = 0;
-            mOption.MaxInboundBidirectionalStreams = 100;
+            mOption.MaxInboundBidirectionalStreams = ushort.MaxValue;
+            mOption.MaxInboundUnidirectionalStreams = ushort.MaxValue;
             mOption.ClientAuthenticationOptions = new SslClientAuthenticationOptions();
             mOption.ClientAuthenticationOptions.ApplicationProtocols = ApplicationProtocols;
             mOption.ClientAuthenticationOptions.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
@@ -106,8 +107,10 @@ namespace AKNet.Quic.Client
             NetLog.Log("客户端 主动 断开服务器 Finish......");
         }
 
+        QuicStream mSendStream;
         private async void StartProcessReceive()
         {
+            mSendStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Unidirectional);
             try
             {
                 while (mQuicConnection != null)
@@ -124,7 +127,6 @@ namespace AKNet.Quic.Client
                             }
                             else
                             {
-                                //mQuicStream.Close();
                                 break;
                             }
                         }
@@ -137,18 +139,18 @@ namespace AKNet.Quic.Client
                 this.mClientPeer.SetSocketState(SOCKET_PEER_STATE.DISCONNECTED);
             }
         }
-
+        
         public async void SendNetStream(ReadOnlyMemory<byte> mBufferSegment)
         {
             try
             {
-                var mStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional);
-                await mStream.WriteAsync(mBufferSegment);
-                mStream.CompleteWrites();
-                mStream.Close();
+                var mSendStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Unidirectional);
+                await mSendStream.WriteAsync(mBufferSegment);
+                mSendStream.CompleteWrites();
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                NetLog.LogError(e.ToString());
                 mClientPeer.SetSocketState(SOCKET_PEER_STATE.DISCONNECTED);
             }
         }

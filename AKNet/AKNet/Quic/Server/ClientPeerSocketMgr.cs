@@ -9,7 +9,6 @@
 using AKNet.Common;
 using System.Net;
 using System.Net.Quic;
-using System.Net.Sockets;
 
 namespace AKNet.Quic.Server
 {
@@ -51,9 +50,11 @@ namespace AKNet.Quic.Server
             return mRemoteEndPoint;
         }
 
-		private async void StartProcessReceive()
+        QuicStream mSendStream;
+        private async void StartProcessReceive()
 		{
-			try
+            mSendStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Unidirectional);
+            try
 			{
 				while (mQuicConnection != null)
 				{
@@ -69,29 +70,27 @@ namespace AKNet.Quic.Server
 							}
 							else
 							{
-								//mQuicStream.Close();
 								break;
                             }
-						}
+                        }
 					}
-				}
+                }
 			}
 			catch (Exception e)
 			{
 				NetLog.LogError(e.ToString());
 				this.mClientPeer.SetSocketState(SOCKET_PEER_STATE.DISCONNECTED);
 			}
-		}
+			NetLog.Log("StartProcessReceive() End");
+        }
 
 		public async void SendNetStream(ReadOnlyMemory<byte> mBufferSegment)
 		{
 			try
 			{
-				QuicStream mStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional);
-				await mStream.WriteAsync(mBufferSegment);
-				mStream.CompleteWrites();
-                mStream.Close();
-
+                var mSendStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Unidirectional);
+                await mSendStream.WriteAsync(mBufferSegment);
+                mSendStream.CompleteWrites();
             }
 			catch (Exception e)
 			{
