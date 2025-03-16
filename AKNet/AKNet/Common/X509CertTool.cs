@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Runtime.ConstrainedExecution;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 namespace AKNet.Common
 {
@@ -6,6 +7,18 @@ namespace AKNet.Common
     //.pfx 文件（也称为 .p12 文件）是一个容器，可以包含以下内容：证书链：包括服务器证书、中间证书和根证书。私钥：与证书对应的私钥，用于身份验证。
     //.pfx（Personal Information Exchange）格式是一种二进制格式，用于存储证书及其私钥
     //PEM（Privacy Enhanced Mail）格式是一种基于 Base64 编码的文本格式，用于存储和传输加密材料（如证书、私钥等）。
+
+    /*New-SelfSignedCertificate
+     * -DnsName $env:computername,
+     * localhost 
+     * -FriendlyName MsQuic-Test 
+     * -KeyUsageProperty Sign 
+     * -KeyUsage DigitalSignature 
+     * -CertStoreLocation cert:\CurrentUser\My 
+     * -HashAlgorithm SHA256 
+     * -Provider "Microsoft Software Key Storage Provider" 
+     * -KeyExportPolicy Exportable
+    */
     internal static class X509CertTool
     {
         private const string Password = "123456"; // 导出证书时使用的密码
@@ -21,11 +34,31 @@ namespace AKNet.Common
             {
                 ori_X509Certificate2 = CreateCert();
             }
-            X509Certificate2 new_X509Certificate2 = LoadCert(ori_X509Certificate2);
-            return new_X509Certificate2;
+
+            NetLog.Log("X509Certificate2 哈希值：" + ori_X509Certificate2.GetCertHashString());
+            return ori_X509Certificate2;
         }
 
-        private static X509Certificate2 GetCertFromX509Store()
+        public static X509Certificate2 GetCertByHash(string hash)
+        {
+            X509Certificate2 target_cert = null;
+            X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            store.Open(OpenFlags.ReadOnly);
+            foreach (X509Certificate2 cert in store.Certificates)
+            {
+                if (cert.GetCertHashString().Equals(hash, StringComparison.OrdinalIgnoreCase))
+                {
+                    target_cert = cert;
+                    break;
+                }
+            }
+            store.Close();
+
+            NetLog.Assert(target_cert != null, "Certificate not found: " + hash);
+            return target_cert;
+        }
+
+        static X509Certificate2 GetCertFromX509Store()
         {
             X509Certificate2 ori_X509Certificate2 = null;
             X509Store mX509Store = new X509Store(storeName, StoreLocation.CurrentUser);
@@ -78,23 +111,11 @@ namespace AKNet.Common
             return isValid;
         }
 
-        static void SaveCert_Pem(X509Certificate2 certificate)
-        {
-            // 获取证书的 DER 编码字节
-            byte[] derBytes = certificate.Export(X509ContentType.Cert, Password);
-            // 将 DER 编码字节转换为 PEM 格式
-            const string header = "-----BEGIN CERTIFICATE-----";
-            const string footer = "-----END CERTIFICATE-----";
-            string base64 = Convert.ToBase64String(derBytes);
-            string pem = $"{header}\n{base64}\n{footer}";
-            File.WriteAllText(Path.Combine(AppContext.BaseDirectory, pem_fileName), pem);
-        }
-
         static X509Certificate2 CreateCert()
         {
-            string subjectName = "CN=localhost"; // 替换为你的主机名或域名
-            string friendlyName = "quic_test_cert";
-            X509Certificate2 certificate = CreateSelfSignedCertificate(subjectName, friendlyName);
+            X509Certificate2 certificate = CreateSelfSignedCertificate();
+            certificate = CreateCert_Cert(certificate);
+
             if (orCertValid(certificate))
             {
                 X509Store mX509Store = new X509Store(storeName, StoreLocation.CurrentUser);
@@ -102,7 +123,6 @@ namespace AKNet.Common
                 mX509Store.Add(certificate);
                 mX509Store.Close();
 
-                SaveCert_Pem(certificate);
                 return certificate;
             }
             else
@@ -112,14 +132,11 @@ namespace AKNet.Common
             return null;
         }
 
-        static X509Certificate2 LoadCert(X509Certificate2 ori_cert)
+        static X509Certificate2 CreateSelfSignedCertificate()
         {
-            byte[] derBytes = ori_cert.Export(X509ContentType.Cert, Password);
-            return X509CertificateLoader.LoadCertificate(derBytes);
-        }
+            string subjectName = "CN=localhost"; // 替换为你的主机名或域名
+            string friendlyName = "quic_test_cert";
 
-        static X509Certificate2 CreateSelfSignedCertificate(string subjectName, string friendlyName)
-        {
             using (RSA rsa = RSA.Create(2048)) // 使用 2048 位 RSA 密钥
             {
                 var certificateRequest = new CertificateRequest(
@@ -129,21 +146,46 @@ namespace AKNet.Common
                     RSASignaturePadding.Pkcs1
                 );
 
-                // 添加扩展属性（如需要）
+                certificateRequest.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(new OidCollection
+                {
+                    new("1.3.6.1.5.5.7.3.1") // serverAuth
+
+                }, false));
+                    
                 certificateRequest.CertificateExtensions.Add(
-                    new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment, critical: false)
+                    new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature, false)
                 );
+
+                SubjectAlternativeNameBuilder sanBuilder = new();
+                sanBuilder.AddDnsName("localhost");
+                certificateRequest.CertificateExtensions.Add(sanBuilder.Build());
 
                 // 创建证书
-                X509Certificate2 certificate = certificateRequest.CreateSelfSigned(
-                    notBefore: DateTime.UtcNow.AddDays(-1),
-                    notAfter: DateTime.UtcNow.AddYears(1)
-                );
-
-                // 设置友好名称
+                X509Certificate2 certificate = certificateRequest.CreateSelfSigned(DateTime.UtcNow.AddDays(-1),DateTime.UtcNow.AddYears(1));
                 certificate.FriendlyName = friendlyName;
                 return certificate;
             }
+        }
+
+        static X509Certificate2 CreateCert_Cert(X509Certificate2 ori_cert)
+        {
+            byte[] Data = ori_cert.Export(X509ContentType.Pfx, Password);
+
+            // 将 DER 编码字节转换为 PEM 格式
+            const string header = "-----BEGIN CERTIFICATE-----";
+            const string footer = "-----END CERTIFICATE-----";
+            string base64 = Convert.ToBase64String(Data);
+            string pem = $"{header}\n{base64}\n{footer}";
+            string path = Path.Combine(AppContext.BaseDirectory, pem_fileName);
+            File.WriteAllText(path, pem);
+
+            X509Certificate2 new_cert = new X509Certificate2(ori_cert.Export(X509ContentType.Pfx));
+            //X509Certificate2 new_cert = X509CertificateLoader.LoadCertificate(Data);
+
+            NetLog.Log("证书已导出到：" + path);
+            NetLog.Log("ori_cert 哈希值：" + ori_cert.GetCertHashString());
+            NetLog.Log("new_cert 哈希值：" + new_cert.GetCertHashString());
+            return new_cert;
         }
     }
 }

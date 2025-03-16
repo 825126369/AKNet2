@@ -17,6 +17,7 @@ namespace AKNet.Quic.Server
 	{
         private Memory<byte> mReceiveBuffer = new byte[1024];
         private Memory<byte> mSendBuffer = new byte[1024];
+        CancellationTokenSource mCancellationTokenSource = new CancellationTokenSource();
 
         private readonly AkCircularBuffer mSendStreamList = new AkCircularBuffer();
 		private QuicConnection mQuicConnection;
@@ -52,37 +53,52 @@ namespace AKNet.Quic.Server
 
 		private async void StartProcessReceive()
 		{
-			while (mQuicConnection != null)
+			try
 			{
-				QuicStream mQuicStream = await mQuicConnection.AcceptInboundStreamAsync();
-				if (mQuicStream != null)
+				while (mQuicConnection != null)
 				{
-					int nLength = await mQuicStream.ReadAsync(mReceiveBuffer);
-					mClientPeer.mMsgReceiveMgr.MultiThreadingReceiveSocketStream(mReceiveBuffer.Span.Slice(0, nLength));
+					QuicStream mQuicStream = await mQuicConnection.AcceptInboundStreamAsync();
+					if (mQuicStream != null)
+					{
+						while (true)
+						{
+							int nLength = await mQuicStream.ReadAsync(mReceiveBuffer);
+							if (nLength > 0)
+							{
+								mClientPeer.mMsgReceiveMgr.MultiThreadingReceiveSocketStream(mReceiveBuffer.Span.Slice(0, nLength));
+							}
+							else
+							{
+								//mQuicStream.Close();
+								break;
+                            }
+						}
+					}
 				}
+			}
+			catch (Exception e)
+			{
+				NetLog.LogError(e.ToString());
+				this.mClientPeer.SetSocketState(SOCKET_PEER_STATE.DISCONNECTED);
 			}
 		}
 
 		public async void SendNetStream(ReadOnlyMemory<byte> mBufferSegment)
 		{
-			QuicStream mStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional);
-			await mStream.WriteAsync(mBufferSegment);
-        }
+			try
+			{
+				QuicStream mStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional);
+				await mStream.WriteAsync(mBufferSegment);
+				mStream.CompleteWrites();
+                mStream.Close();
 
-        private void DisConnectedWithNormal()
-        {
-            mClientPeer.SetSocketState(SOCKET_PEER_STATE.DISCONNECTED);
-        }
-
-        private void DisConnectedWithException(Exception e)
-		{
-			mClientPeer.SetSocketState(SOCKET_PEER_STATE.DISCONNECTED);
+            }
+			catch (Exception e)
+			{
+				NetLog.LogError(e.ToString());
+				this.mClientPeer.SetSocketState(SOCKET_PEER_STATE.DISCONNECTED);
+			}
 		}
-
-		private void DisConnectedWithSocketError(SocketError mError)
-		{
-            mClientPeer.SetSocketState(SOCKET_PEER_STATE.DISCONNECTED);
-        }
 
 		private async void CloseSocket()
 		{
