@@ -16,34 +16,40 @@ namespace AKNet.Common
 
         public static X509Certificate2 GetCert()
         {
-
             X509Certificate2 ori_X509Certificate2 = GetCertFromX509Store();
             if (ori_X509Certificate2 == null)
             {
                 ori_X509Certificate2 = CreateCert();
             }
             X509Certificate2 new_X509Certificate2 = LoadCert(ori_X509Certificate2);
-            NetLog.Log("11111111111111111111111111");
             return new_X509Certificate2;
         }
 
-        public static X509Certificate2 GetCertFromX509Store()
+        private static X509Certificate2 GetCertFromX509Store()
         {
             X509Certificate2 ori_X509Certificate2 = null;
             X509Store mX509Store = new X509Store(storeName, StoreLocation.CurrentUser);
-            mX509Store.Open(OpenFlags.ReadWrite);
-            while (mX509Store.Certificates.Count > 1)
+            mX509Store.Open(OpenFlags.MaxAllowed | OpenFlags.ReadWrite);
+            
+            for (int i = mX509Store.Certificates.Count - 1; i >= 0; i--)
             {
-                mX509Store.Certificates.RemoveAt(0);
+                if (!orCertValid(mX509Store.Certificates[i]))
+                {
+                    mX509Store.Remove(mX509Store.Certificates[i]);
+                }
+            }
+            
+            if (mX509Store.Certificates.Count > 1)
+            {
+                for(int i = mX509Store.Certificates.Count - 1; i >= 1; i--)
+                {
+                    mX509Store.Remove(mX509Store.Certificates[i]);
+                }
             }
 
             if (mX509Store.Certificates.Count == 1)
             {
-                var cert = mX509Store.Certificates[0];
-                if (orCertValid(cert))
-                {
-                    ori_X509Certificate2 = cert;
-                }
+                ori_X509Certificate2 = mX509Store.Certificates[0];
             }
             mX509Store.Close();
             return ori_X509Certificate2;
@@ -60,17 +66,16 @@ namespace AKNet.Common
             // 验证证书链
             X509Chain chain = new X509Chain();
             chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck; // 可以根据需要启用吊销检查
-            chain.ChainPolicy.VerificationFlags = X509VerificationFlags.NoFlag;
+            chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
             bool isValid = chain.Build(certificate);
-            if (!isValid)
+            if(!isValid)
             {
-                NetLog.LogError("证书链验证失败！");
                 foreach (var status in chain.ChainStatus)
                 {
                     NetLog.LogError("错误信息: " + status.StatusInformation);
                 }
             }
-            return true;
+            return isValid;
         }
 
         static void SaveCert_Pem(X509Certificate2 certificate)
@@ -99,6 +104,10 @@ namespace AKNet.Common
 
                 SaveCert_Pem(certificate);
                 return certificate;
+            }
+            else
+            {
+                NetLog.LogError("CreateCert Error: " + certificate);
             }
             return null;
         }

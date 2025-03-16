@@ -10,11 +10,15 @@ using AKNet.Common;
 using System.Net;
 using System.Net.Quic;
 using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 
 namespace AKNet.Quic.Client
 {
     internal class QuicConnectionMgr
 	{
+        private const byte DefaultCloseErrorCode = 0x0A;
+        private const byte DefaultStreamErrorCode = 0x0B;
+
         private Memory<byte> mReceiveBuffer = new byte[1024];
         private Memory<byte> mSendBuffer = new byte[1024];
 
@@ -56,43 +60,53 @@ namespace AKNet.Quic.Client
 				mIPEndPoint = new IPEndPoint(mIPAddress, ServerPort);
 			}
 
-			mQuicConnection = await QuicConnection.ConnectAsync(GetQuicClientConnectionOptions(mIPEndPoint));
-			if (mQuicConnection == null)
-			{
-				mClientPeer.SetSocketState(SOCKET_PEER_STATE.RECONNECTING);
-			}
-			else
-			{
-				mClientPeer.SetSocketState(SOCKET_PEER_STATE.CONNECTED);
-				StartProcessReceive();
+            try
+            {
+                mQuicConnection = await QuicConnection.ConnectAsync(GetQuicClientConnectionOptions(mIPEndPoint));
+                mClientPeer.SetSocketState(SOCKET_PEER_STATE.CONNECTED);
+
+                NetLog.Log("Client 连接服务器成功: " + this.ServerIp + " | " + this.nServerPort);
+                StartProcessReceive();
+            }
+            catch (Exception e)
+            {
+                NetLog.LogError(e.ToString());
+                mClientPeer.SetSocketState(SOCKET_PEER_STATE.RECONNECTING);
             }
 		}
 
         private QuicClientConnectionOptions GetQuicClientConnectionOptions(IPEndPoint mIPEndPoint)
         {
-            QuicClientConnectionOptions mOption = new QuicClientConnectionOptions();
-            mOption.RemoteEndPoint = mIPEndPoint;
-            mOption.DefaultCloseErrorCode = 0x0A;
-            mOption.DefaultStreamErrorCode = 0x0B;
-            mOption.ClientAuthenticationOptions = new System.Net.Security.SslClientAuthenticationOptions();
-
-
+            var mCert = X509CertTool.GetCert();
+            NetLog.Assert(mCert != null, "GetCert() == null");
             var ApplicationProtocols = new List<SslApplicationProtocol>();
+            ApplicationProtocols.Add(SslApplicationProtocol.Http11);
+            ApplicationProtocols.Add(SslApplicationProtocol.Http2);
             ApplicationProtocols.Add(SslApplicationProtocol.Http3);
 
+            QuicClientConnectionOptions mOption = new QuicClientConnectionOptions();
+            mOption.RemoteEndPoint = mIPEndPoint;
+            mOption.DefaultCloseErrorCode = DefaultCloseErrorCode;
+            mOption.DefaultStreamErrorCode = DefaultStreamErrorCode;
+            mOption.ClientAuthenticationOptions = new SslClientAuthenticationOptions();
             mOption.ClientAuthenticationOptions.ApplicationProtocols = ApplicationProtocols;
-
-
+            mOption.ClientAuthenticationOptions.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
             return mOption;
         }
 
         public bool DisConnectServer()
 		{
-			NetLog.Log("客户端 主动 断开服务器 Begin......");
 			MainThreadCheck.Check();
-			mQuicConnection.DisposeAsync();
-			return true;
+            DisConnectServer2();
+            return true;
 		}
+
+        private async void DisConnectServer2()
+        {
+            NetLog.Log("客户端 主动 断开服务器 Begin......");
+            await mQuicConnection.CloseAsync(DefaultCloseErrorCode);
+            NetLog.Log("客户端 主动 断开服务器 Finish......");
+        }
 
         private async void StartProcessReceive()
 		{
@@ -107,12 +121,18 @@ namespace AKNet.Quic.Client
             }
         }
 
-		public async void SendNetStream(ReadOnlyMemory<byte> mBufferSegment)
-		{
-			var stream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional);
-			await stream.WriteAsync(mBufferSegment);
-			stream.CompleteWrites();
-		}
+        public async void SendNetStream(ReadOnlyMemory<byte> mBufferSegment)
+        {
+            try
+            {
+                var stream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional);
+                await stream.WriteAsync(mBufferSegment);
+            }
+            catch (Exception)
+            {
+                mClientPeer.SetSocketState(SOCKET_PEER_STATE.DISCONNECTED);
+            }
+        }
 
         private void DisConnectedWithError()
         {
@@ -142,20 +162,20 @@ namespace AKNet.Quic.Client
             return mRemoteEndPoint;
         }
 
-		private async Task CloseSocket()
+		private async void CloseSocket()
 		{
             if (mQuicConnection != null)
             {
                 QuicConnection mQuicConnection2 = mQuicConnection;
                 mQuicConnection = null;
-				await mQuicConnection2.DisposeAsync();
+				await mQuicConnection2.CloseAsync(DefaultCloseErrorCode);
             }
         }
 
 		public void Reset()
 		{
-            CloseSocket();
-		}
+            //CloseSocket();
+        }
 
 		public void Release()
 		{
