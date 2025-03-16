@@ -6,7 +6,6 @@
 *        ModifyTime:2025/2/27 22:28:11
 *        Copyright:MIT软件许可证
 ************************************Copyright*****************************************/
-using System;
 namespace AKNet.Common
 {
     public interface NetClientInterface
@@ -32,6 +31,6 @@ namespace AKNet.Common
         void SendNetData(ushort nPackageId);
         void SendNetData(ushort nPackageId, byte[] data);
         void SendNetData(NetPackage mNetPackage);
-        void SendNetData(UInt16 nPackageId, ReadOnlySpan<byte> buffer);
+        void SendNetData(ushort nPackageId, ReadOnlySpan<byte> buffer);
     }
 }
