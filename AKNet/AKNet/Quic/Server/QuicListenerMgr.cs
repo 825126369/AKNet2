@@ -66,22 +66,9 @@ namespace AKNet.Quic.Server
             try
             {
                 var options = GetQuicListenerOptions(mIPAddress, nPort);
-                var mQuicListener = await QuicListener.ListenAsync(options);
-
+                mQuicListener = await QuicListener.ListenAsync(options);
                 NetLog.Log("服务器 初始化成功: " + mIPAddress + " | " + nPort);
-                if (mQuicListener != null)
-                {
-                    StartProcessAccept();
-                }
-                else
-                {
-                   
-                }
-            }
-            catch (QuicException e)
-            {
-                this.mState = SOCKET_SERVER_STATE.EXCEPTION;
-                NetLog.LogError(e.ToString());
+                StartProcessAccept();
             }
             catch (Exception e)
             {
@@ -109,7 +96,7 @@ namespace AKNet.Quic.Server
             string hash = "5F375C6C1F53F9B0E669462D4F4D41CF592CAED1";
             var mCert = X509CertTool.GetCert();
 
-            mCert = X509CertificateLoader.LoadCertificateFromFile("cert:\\CurrentUser\\My\\MsQuic-Test");
+            mCert = X509CertificateLoader.LoadCertificateFromFile("D:\\Me\\OpenSource\\AKNet2\\cert.pfx");
             NetLog.Assert(mCert != null, "GetCert() == null");
             mCert = null;
 
@@ -134,8 +121,15 @@ namespace AKNet.Quic.Server
         {
             while (mQuicListener != null)
             {
-                QuicConnection connection = await mQuicListener.AcceptConnectionAsync();
-                mQuicServer.mClientPeerManager.MultiThreadingHandleConnectedSocket(connection);
+                try
+                {
+                    QuicConnection connection = await mQuicListener.AcceptConnectionAsync();
+                    mQuicServer.mClientPeerManager.MultiThreadingHandleConnectedSocket(connection);
+                }
+                catch (Exception e)
+                {
+                    NetLog.LogError(e.ToString());
+                }
             }
         }
 
