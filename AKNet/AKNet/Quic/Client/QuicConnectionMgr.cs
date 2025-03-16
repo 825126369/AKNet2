@@ -7,6 +7,7 @@
 *        Copyright:MIT软件许可证
 ************************************Copyright*****************************************/
 using AKNet.Common;
+using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Net.Quic;
@@ -16,15 +17,18 @@ namespace AKNet.Quic.Client
 {
     internal class QuicConnectionMgr
 	{
-        private Memory<byte> mReceiveBuffer = new byte[1024];
-        private Memory<byte> mSendBuffer = new byte[1024];
+        private readonly Memory<byte> mReceiveBuffer = new byte[1024];
+        private readonly byte[] mSendBuffer = new byte[1024];
+
+        private readonly AkCircularBuffer mSendStreamList = new AkCircularBuffer();
+        private bool bSendIOContextUsed = false;
 
         private QuicConnection mQuicConnection = null;
 		private string ServerIp = "";
 		private int nServerPort = 0;
 		private IPEndPoint mIPEndPoint = null;
         private ClientPeer mClientPeer;
-
+        private QuicStream mSendQuicStream;
         public QuicConnectionMgr(ClientPeer mClientPeer)
 		{
 			this.mClientPeer = mClientPeer;
@@ -85,8 +89,8 @@ namespace AKNet.Quic.Client
             mOption.RemoteEndPoint = mIPEndPoint;
             mOption.DefaultCloseErrorCode = 0;
             mOption.DefaultStreamErrorCode = 0;
-            mOption.MaxInboundBidirectionalStreams = ushort.MaxValue;
-            mOption.MaxInboundUnidirectionalStreams = ushort.MaxValue;
+            mOption.MaxInboundBidirectionalStreams = 1000;
+            mOption.MaxInboundUnidirectionalStreams = 1000;
             mOption.ClientAuthenticationOptions = new SslClientAuthenticationOptions();
             mOption.ClientAuthenticationOptions.ApplicationProtocols = ApplicationProtocols;
             mOption.ClientAuthenticationOptions.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
@@ -107,10 +111,9 @@ namespace AKNet.Quic.Client
             NetLog.Log("客户端 主动 断开服务器 Finish......");
         }
 
-        QuicStream mSendStream;
         private async void StartProcessReceive()
         {
-            mSendStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Unidirectional);
+            mSendQuicStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Unidirectional);
             try
             {
                 while (mQuicConnection != null)
@@ -123,6 +126,7 @@ namespace AKNet.Quic.Client
                             int nLength = await mQuicStream.ReadAsync(mReceiveBuffer);
                             if (nLength > 0)
                             {
+                                //NetLog.Log("Receive NetStream: " + nLength);
                                 mClientPeer.mMsgReceiveMgr.MultiThreadingReceiveSocketStream(mReceiveBuffer.Span.Slice(0, nLength));
                             }
                             else
@@ -140,13 +144,34 @@ namespace AKNet.Quic.Client
             }
         }
         
-        public async void SendNetStream(ReadOnlyMemory<byte> mBufferSegment)
+        public void SendNetStream(ReadOnlyMemory<byte> mBufferSegment)
+        {
+            lock (mSendStreamList)
+            {
+                mSendStreamList.WriteFrom(mBufferSegment.Span);
+            }
+
+            if (!bSendIOContextUsed)
+            {
+                bSendIOContextUsed = true;
+                SendNetStream2();
+            }
+        }
+
+        private async void SendNetStream2()
         {
             try
             {
-                var mSendStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Unidirectional);
-                await mSendStream.WriteAsync(mBufferSegment);
-                mSendStream.CompleteWrites();
+                while(mSendStreamList.Length > 0)
+                {
+                    int nLength = 0;
+                    lock (mSendStreamList)
+                    {
+                        nLength = mSendStreamList.WriteToMax(0, mSendBuffer, 0, mSendBuffer.Length);
+                    }
+                    await mSendQuicStream.WriteAsync(mSendBuffer, 0, nLength);
+                }
+                bSendIOContextUsed = false;
             }
             catch (Exception e)
             {
@@ -195,7 +220,7 @@ namespace AKNet.Quic.Client
 
 		public void Reset()
 		{
-            //CloseSocket();
+            CloseSocket();
         }
 
 		public void Release()

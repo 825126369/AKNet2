@@ -14,12 +14,15 @@ namespace AKNet.Quic.Server
 {
     internal class ClientPeerSocketMgr
 	{
-        private Memory<byte> mReceiveBuffer = new byte[1024];
-        private Memory<byte> mSendBuffer = new byte[1024];
+        private readonly Memory<byte> mReceiveBuffer = new byte[1024];
+        private readonly byte[] mSendBuffer = new byte[1024];
         CancellationTokenSource mCancellationTokenSource = new CancellationTokenSource();
 
         private readonly AkCircularBuffer mSendStreamList = new AkCircularBuffer();
-		private QuicConnection mQuicConnection;
+        private bool bSendIOContextUsed = false;
+        private QuicStream mSendQuicStream;
+
+        private QuicConnection mQuicConnection;
         private ClientPeer mClientPeer;
 		private QuicServer mQuicServer;
 		
@@ -50,23 +53,24 @@ namespace AKNet.Quic.Server
             return mRemoteEndPoint;
         }
 
-        QuicStream mSendStream;
         private async void StartProcessReceive()
 		{
-            mSendStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Unidirectional);
+            mSendQuicStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Unidirectional);
+
             try
 			{
 				while (mQuicConnection != null)
 				{
 					QuicStream mQuicStream = await mQuicConnection.AcceptInboundStreamAsync();
-					if (mQuicStream != null)
-					{
-						while (true)
+                    if (mQuicStream != null)
+                    {
+                        while (true)
 						{
-							int nLength = await mQuicStream.ReadAsync(mReceiveBuffer);
+                            int nLength = await mQuicStream.ReadAsync(mReceiveBuffer);
 							if (nLength > 0)
 							{
-								mClientPeer.mMsgReceiveMgr.MultiThreadingReceiveSocketStream(mReceiveBuffer.Span.Slice(0, nLength));
+                                //NetLog.Log("Receive NetStream: " + nLength);
+                                mClientPeer.mMsgReceiveMgr.MultiThreadingReceiveSocketStream(mReceiveBuffer.Span.Slice(0, nLength));
 							}
 							else
 							{
@@ -78,28 +82,48 @@ namespace AKNet.Quic.Server
 			}
 			catch (Exception e)
 			{
-				NetLog.LogError(e.ToString());
+				//NetLog.LogError(e.ToString());
 				this.mClientPeer.SetSocketState(SOCKET_PEER_STATE.DISCONNECTED);
 			}
-			NetLog.Log("StartProcessReceive() End");
         }
 
-		public async void SendNetStream(ReadOnlyMemory<byte> mBufferSegment)
-		{
-			try
-			{
-                var mSendStream = await mQuicConnection.OpenOutboundStreamAsync(QuicStreamType.Unidirectional);
-                await mSendStream.WriteAsync(mBufferSegment);
-                mSendStream.CompleteWrites();
+        public void SendNetStream(ReadOnlyMemory<byte> mBufferSegment)
+        {
+            lock (mSendStreamList)
+            {
+                mSendStreamList.WriteFrom(mBufferSegment.Span);
             }
-			catch (Exception e)
-			{
-				NetLog.LogError(e.ToString());
-				this.mClientPeer.SetSocketState(SOCKET_PEER_STATE.DISCONNECTED);
-			}
-		}
 
-		private async void CloseSocket()
+            if (!bSendIOContextUsed)
+            {
+                bSendIOContextUsed = true;
+                SendNetStream2();
+            }
+        }
+
+        private async void SendNetStream2()
+        {
+            try
+            {
+                while (mSendStreamList.Length > 0)
+                {
+                    int nLength = 0;
+                    lock (mSendStreamList)
+                    {
+                        nLength = mSendStreamList.WriteToMax(0, mSendBuffer, 0, mSendBuffer.Length);
+                    }
+                    await mSendQuicStream.WriteAsync(mSendBuffer, 0, nLength);
+                }
+                bSendIOContextUsed = false;
+            }
+            catch (Exception e)
+            {
+                //NetLog.LogError(e.ToString());
+                mClientPeer.SetSocketState(SOCKET_PEER_STATE.DISCONNECTED);
+            }
+        }
+
+        private async void CloseSocket()
 		{
 			if (mQuicConnection != null)
 			{
