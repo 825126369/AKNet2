@@ -89,8 +89,8 @@ namespace AKNet.Quic.Client
             mOption.RemoteEndPoint = mIPEndPoint;
             mOption.DefaultCloseErrorCode = 0;
             mOption.DefaultStreamErrorCode = 0;
-            mOption.MaxInboundBidirectionalStreams = 1000;
-            mOption.MaxInboundUnidirectionalStreams = 1000;
+            mOption.MaxInboundBidirectionalStreams = 1;
+            mOption.MaxInboundUnidirectionalStreams = 1;
             mOption.ClientAuthenticationOptions = new SslClientAuthenticationOptions();
             mOption.ClientAuthenticationOptions.ApplicationProtocols = ApplicationProtocols;
             mOption.ClientAuthenticationOptions.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;

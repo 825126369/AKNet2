@@ -109,8 +109,8 @@ namespace AKNet.Quic.Server
             mOption.ServerAuthenticationOptions = ServerAuthenticationOptions;
             mOption.DefaultCloseErrorCode = 0;
             mOption.DefaultStreamErrorCode = 0;
-            mOption.MaxInboundBidirectionalStreams = 1000;
-            mOption.MaxInboundUnidirectionalStreams = 1000;
+            mOption.MaxInboundBidirectionalStreams = 1;
+            mOption.MaxInboundUnidirectionalStreams = 1;
             return ValueTask.FromResult(mOption);
         }
 
