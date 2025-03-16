@@ -8,7 +8,7 @@ namespace TestNetClient
 {
     public class NetHandler
     {
-        public const int nClientCount = 1;
+        public const int nClientCount = 100;
         public const int nPackageCount = 100;
         public const double fFrameInternalTime = 0;
         public const int nSumPackageCount = nClientCount * nPackageCount * 100;
@@ -47,7 +47,7 @@ namespace TestNetClient
             File.Delete(logFileName);
             for (int i = 0; i < nClientCount; i++)
             {
-                NetClientMain mNetClient = new NetClientMain(NetType.Quic);
+                NetClientMain mNetClient = new NetClientMain(NetType.TCP);
                 mClientList.Add(mNetClient);
                 mNetClient.addNetListenFunc(UdpNetCommand_COMMAND_TESTCHAT, ReceiveMessage);
                 mNetClient.ConnectServer("127.0.0.1", 6000);
@@ -116,7 +116,7 @@ namespace TestNetClient
             TESTChatMessage mdata = Protocol3Utility.getData<TESTChatMessage>(mPackage);
 
             nReceivePackageCount++;
-            if (nReceivePackageCount % 1000 == 0)
+            if (nReceivePackageCount % 10000 == 0)
             {
                 string msg = $"接受包数量: {nReceivePackageCount} 总共花费时间: {mStopWatch.Elapsed.TotalSeconds},平均1秒发送：{nReceivePackageCount / mStopWatch.Elapsed.TotalSeconds}";
                 Console.WriteLine(msg);
