@@ -8,14 +8,11 @@
 ************************************Copyright*****************************************/
 namespace AKNet.Common
 {
-    public interface NetConfigInterface
-    {
-
-    }
-
     public enum NetType
     {
         TCP,
         Quic,
+        WebSocket,
     }
 }
+
