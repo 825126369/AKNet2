@@ -1,5 +1,4 @@
-﻿using System.Runtime.ConstrainedExecution;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 namespace AKNet.Common
 {
@@ -169,23 +168,29 @@ namespace AKNet.Common
 
         static X509Certificate2 CreateCert_Cert(X509Certificate2 ori_cert)
         {
-            byte[] Data = ori_cert.Export(X509ContentType.Pfx, Password);
+            byte[] Data = ori_cert.Export(X509ContentType.Pfx);
+            string path = Path.Combine(AppContext.BaseDirectory, cert_fileName);
+            File.WriteAllBytes(path, Data);
 
-            // 将 DER 编码字节转换为 PEM 格式
-            const string header = "-----BEGIN CERTIFICATE-----";
-            const string footer = "-----END CERTIFICATE-----";
-            string base64 = Convert.ToBase64String(Data);
-            string pem = $"{header}\n{base64}\n{footer}";
-            string path = Path.Combine(AppContext.BaseDirectory, pem_fileName);
-            File.WriteAllText(path, pem);
-
-            X509Certificate2 new_cert = new X509Certificate2(ori_cert.Export(X509ContentType.Pfx));
-            //X509Certificate2 new_cert = X509CertificateLoader.LoadCertificate(Data);
+            X509Certificate2 new_cert = new X509Certificate2(Data);
+            // X509Certificate2 new_cert = X509CertificateLoader.LoadCertificate(Data);
 
             NetLog.Log("证书已导出到：" + path);
             NetLog.Log("ori_cert 哈希值：" + ori_cert.GetCertHashString());
             NetLog.Log("new_cert 哈希值：" + new_cert.GetCertHashString());
-            return new_cert;
+            return ori_cert;
         }
+
+        static string GetCertificatePEM(X509Certificate2 certificate)
+        {
+            // 获取证书的公钥部分（DER 编码的字节数组）
+            byte[] derBytes = certificate.Export(X509ContentType.Cert);
+            // 将字节数组转换为 Base64 编码的字符串
+            string base64String = Convert.ToBase64String(derBytes);
+            // 构造 PEM 格式的内容
+            string pemContent = $"-----BEGIN CERTIFICATE-----\n{base64String}\n-----END CERTIFICATE-----";
+            return pemContent;
+        }
+
     }
 }

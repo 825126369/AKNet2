@@ -77,7 +77,7 @@ namespace AKNet.Quic.Server
             }
         }
 
-        private static QuicListenerOptions GetQuicListenerOptions(IPAddress mIPAddress, int nPort)
+        private QuicListenerOptions GetQuicListenerOptions(IPAddress mIPAddress, int nPort)
         {
             var ApplicationProtocols = new List<SslApplicationProtocol>();
             ApplicationProtocols.Add(SslApplicationProtocol.Http3);
@@ -89,7 +89,7 @@ namespace AKNet.Quic.Server
             return mOption;
         }
 
-        private static ValueTask<QuicServerConnectionOptions> ConnectionOptionsCallback(QuicConnection mQuicConnection, SslClientHelloInfo mSslClientHelloInfo, CancellationToken mCancellationToken)
+        private ValueTask<QuicServerConnectionOptions> ConnectionOptionsCallback(QuicConnection mQuicConnection, SslClientHelloInfo mSslClientHelloInfo, CancellationToken mCancellationToken)
         {
             var mCert = X509CertTool.GetCert();
 
@@ -150,6 +150,7 @@ namespace AKNet.Quic.Server
                 await mQuicListener2.DisposeAsync();
             }
         }
+
     }
 
 }
